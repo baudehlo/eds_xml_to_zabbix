@@ -11,4 +11,4 @@ fs.readdirSync(__dirname + "/env").forEach(function (file) {
     }
 });
 
-require('./app');
+require('./index');

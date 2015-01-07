@@ -1,0 +1,16 @@
+<owd_DS18B20 Description="Programmable resolution thermometer">
+<Name>DS18B20</Name>
+<Family>28</Family>
+<ROMId>C70000062F00CC28</ROMId>
+<Health>7</Health>
+<Channel>1</Channel>
+<RawData>
+93014B467FFF0D1032FF0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+</RawData>
+<PrimaryValue>25.1875 Deg C</PrimaryValue>
+<Temperature Units="Centigrade">25.1875</Temperature>
+<UserByte1 Writable="True">75</UserByte1>
+<UserByte2 Writable="True">70</UserByte2>
+<Resolution>12</Resolution>
+<PowerSource>255</PowerSource>
+</owd_DS18B20>
