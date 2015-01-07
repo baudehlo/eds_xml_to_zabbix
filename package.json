@@ -1,0 +1,14 @@
+{
+  "name": "eds_xml_to_zabbix",
+  "version": "1.0.0",
+  "description": "EDS XML POST requests sent to Zabbix",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matt Sergeant",
+  "license": "Private",
+  "dependencies": {
+    "zabbix-sender": "^0.2.0"
+  }
+}
