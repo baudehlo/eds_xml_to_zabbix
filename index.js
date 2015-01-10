@@ -1,10 +1,20 @@
 "use strict";
 
-var ZabbixSender = require('zabbix-sender');
+var zabbix_options = {
+    'zabbix-server': '127.0.0.1',
+    'port': 10051,
+    'host': 'Zabbix server',
+    'realtime': true,
+    'with-timestamps': true,
+};
+
+var this_host = require('os').hostname();
+
+var sender = require('zbx_sender').createZabbixSender(zabbix_options);
 var http = require('http');
+var dns = require('dns');
 
 var port = parseInt(process.env.PORT || '3000', 10);
-var sender       = new ZabbixSender();
 
 /* Example Data:
 
@@ -39,32 +49,48 @@ http.createServer(function (req, res) {
             post_data += data;
         });
         req.on('end', function () {
-            // console.log("POST data: ", post_data);
-            var match, data = {};
+            console.log("POST data: ", post_data);
+            var match;
+            var data = [];
+            var now = Date.now() / 1000;
             match = /<Temperature([^>]*)>([^<]*)<\/Temperature>/.exec(post_data);
             if (match) {
-                data.temperature = match[2];
+                data.push({
+                    key: 'temperature',
+                    value: match[2],
+                    clock: now,
+                });
             }
             match = /<ROMId([^>]*)>([^<]*)<\/ROMId>/.exec(post_data);
             if (match) {
-                data.rom_id = match[2];
+                data.push({
+                    key: 'rom_id',
+                    value: match[2],
+                    clock: now,
+                });
             }
             match = /<Health([^>]*)>([^<]*)<\/Health>/.exec(post_data);
             if (match) {
-                data.health = match[2];
+                data.push({
+                    key: 'health',
+                    value: match[2],
+                    clock: now,
+                });
             }
-            console.log("Got values: ", data);
-            sender.send(data, function (err) {
+            dns.reverse(req.socket.remoteAddress, function (err, domains) {
+                var reverse = 'error_resolving.' + req.socket.remoteAddress;
                 if (err) {
-                    // Not sure what to do here...
-                    res.writeHead(500, {'Content-Type': 'text/plain'});
-                    res.end("Error occurred: " + JSON.stringify(err));
+                    console.error("Failed to reverse IP: " + req.socket.remoteAddress + " :", err);
                 }
                 else {
-                    res.writeHead(200, {'Content-Type': 'text/plain'});
-                    res.end("Thanks");                    
+                    reverse = domains[0] || reverse;
                 }
-            })
+                data.forEach(function (d) { d.host = reverse });
+                console.log("Got values: ", data);
+                sender.send(data);
+                res.writeHead(200, {'Content-Type': 'text/plain'});
+                res.end("Thanks");                    
+            });
         });
     }
     else {
