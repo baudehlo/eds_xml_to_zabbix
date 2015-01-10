@@ -1,7 +1,7 @@
 "use strict";
 
 var zabbix_options = {
-    'zabbix-server': '127.0.0.1',
+    'zabbix-server': '192.168.36.56',
     'port': 10051,
     'host': 'Zabbix server',
     'realtime': true,
@@ -15,6 +15,13 @@ var http = require('http');
 var dns = require('dns');
 
 var port = parseInt(process.env.PORT || '3000', 10);
+
+var wanted_keys = [
+    'Temperature',
+    'Health',
+    'Vad',
+    'Humidity',
+];
 
 /* Example Data:
 
@@ -52,45 +59,28 @@ http.createServer(function (req, res) {
             console.log("POST data: ", post_data);
             var match;
             var data = [];
+            var rom_id = 'Unknown_Rom_ID';
             var now = Date.now() / 1000;
-            match = /<Temperature([^>]*)>([^<]*)<\/Temperature>/.exec(post_data);
-            if (match) {
-                data.push({
-                    key: 'temperature',
-                    value: match[2],
-                    clock: now,
-                });
-            }
             match = /<ROMId([^>]*)>([^<]*)<\/ROMId>/.exec(post_data);
             if (match) {
-                data.push({
-                    key: 'rom_id',
-                    value: match[2],
-                    clock: now,
-                });
+                rom_id = match[2];
             }
-            match = /<Health([^>]*)>([^<]*)<\/Health>/.exec(post_data);
-            if (match) {
-                data.push({
-                    key: 'health',
-                    value: match[2],
-                    clock: now,
-                });
-            }
-            dns.reverse(req.socket.remoteAddress, function (err, domains) {
-                var reverse = 'error_resolving.' + req.socket.remoteAddress;
-                if (err) {
-                    console.error("Failed to reverse IP: " + req.socket.remoteAddress + " :", err);
+            wanted_keys.forEach(function (key) {
+                var regexp = new Regexp('<' + key + '([^>]*)>([^<]*)<\/' + key + '>');
+                match = regexp.exec(post_data);
+                if (match) {
+                    data.push({
+                        key: key.toLowerCase(),
+                        value: match[2],
+                        clock: now,
+                        host: rom_id,
+                    });
                 }
-                else {
-                    reverse = domains[0] || reverse;
-                }
-                data.forEach(function (d) { d.host = reverse });
-                console.log("Got values: ", data);
-                sender.send(data);
-                res.writeHead(200, {'Content-Type': 'text/plain'});
-                res.end("Thanks");                    
             });
+            console.log("Got values: ", data);
+            sender.send(data);
+            res.writeHead(200, {'Content-Type': 'text/plain'});
+            res.end("Thanks");                    
         });
     }
     else {
