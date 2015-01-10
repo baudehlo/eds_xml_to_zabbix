@@ -56,27 +56,32 @@ http.createServer(function (req, res) {
             post_data += data;
         });
         req.on('end', function () {
-            // console.log("POST data: ", post_data);
+            if (process.env.LOGPOSTDATA) console.log("POST data: ", post_data);
             var match;
             var data = [];
             var rom_id = 'Unknown_Rom_ID';
             var now = Date.now() / 1000;
-            match = /<ROMId([^>]*)>([^<]*)<\/ROMId>/.exec(post_data);
-            if (match) {
-                rom_id = match[2];
-            }
-            wanted_keys.forEach(function (key) {
-                var regexp = new Regexp('<' + key + '([^>]*)>([^<]*)<\/' + key + '>');
-                match = regexp.exec(post_data);
+            while (match = /<owd_(\w+)([^>]*?)>([\s\S]*?)<\/owd_\1>/.exec(post_data)) {
+                var device = match[1];
+                var owd_data = match[3];
+                post_data = post_data.substring(match.index + owd_data.length);
+                match = /<ROMId\b([^>]*)>([^<]*)<\/ROMId>/i.exec(owd_data);
                 if (match) {
-                    data.push({
-                        key: key.toLowerCase(),
-                        value: match[2],
-                        clock: now,
-                        host: rom_id,
-                    });
+                    rom_id = match[2];
                 }
-            });
+                wanted_keys.forEach(function (key) {
+                    var regexp = new RegExp('<' + key + '([^>]*)>([^<]*)<\/' + key + '>');
+                    match = regexp.exec(owd_data);
+                    if (match) {
+                        data.push({
+                            key: key.toLowerCase(),
+                            value: match[2],
+                            clock: now,
+                            host: rom_id,
+                        });
+                    }
+                });
+            }
             console.log("Got values: ", data);
             sender.send(data);
             res.writeHead(200, {'Content-Type': 'text/plain'});
