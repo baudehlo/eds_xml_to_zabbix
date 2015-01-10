@@ -69,6 +69,7 @@ http.createServer(function (req, res) {
                 if (match) {
                     rom_id = match[2];
                 }
+                console.log("ROMId: " + rom_id);
                 wanted_keys.forEach(function (key) {
                     var regexp = new RegExp('<' + key + '([^>]*)>([^<]*)<\/' + key + '>');
                     match = regexp.exec(owd_data);
@@ -76,13 +77,14 @@ http.createServer(function (req, res) {
                         data.push({
                             key: key.toLowerCase(),
                             value: match[2],
-                            clock: now,
+                            clock: now.toFixed(),
                             host: rom_id,
                         });
+                        console.log("  " + key + ": " + match[2]);
                     }
                 });
             }
-            console.log("Got values: ", data);
+            // console.log("Got values: ", data);
             sender.send(data);
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end("Thanks");                    
