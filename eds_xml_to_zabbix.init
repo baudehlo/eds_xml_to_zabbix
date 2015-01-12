@@ -11,6 +11,7 @@
 
 exec="/usr/bin/node"
 prog="eds_xml_to_zabbix"
+pidfile="/var/run/eds_xml_to_zabbix.pid"
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
@@ -22,7 +23,7 @@ start() {
     [ -x $exec ] || exit 5
     echo -n $"Starting $prog: "
     ulimit -n $max_open_files
-    daemon "$exec /home/matt/eds_xml_to_zabbix/index.js"
+    daemon --pidfile ${pidfile} -- "$exec /opt/owserver/index.js"
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -31,7 +32,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-    killproc $prog
+    killproc --pidfile ${pidfile} $prog
     retval=$?
     echo
     rm -f $lockfile
@@ -53,7 +54,7 @@ force_reload() {
 
 rh_status() {
     # run checks to determine if the service is running or use generic status
-    status $prog
+    status --pidfile ${pidfile} $prog
 }
 
 rh_status_q() {
