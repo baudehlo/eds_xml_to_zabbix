@@ -1,5 +1,7 @@
 "use strict";
 
+var pid_file = process.env.PIDFILE || '/var/run/owserver.pid';
+
 var zabbix_options = {
     'zabbix-server': '192.168.36.56',
     'port': 10051,
@@ -32,6 +34,8 @@ var this_host = require('os').hostname();
 
 var sender = require('zbx_sender').createZabbixSender(zabbix_options);
 var Syslog = require('syslog2');
+var npid = require('npid');
+var daemon = require('daemon');
 var log = new Syslog(syslog_options);
 var http = require('http');
 var dns = require('dns');
@@ -58,6 +62,11 @@ var port = parseInt(process.env.PORT || '3000', 10);
 </owd_DS18B20>
 
 */
+
+if (process.env.NODE_ENV != 'development') {
+    daemon();
+    npid.create(pid_file).removeOnExit();
+}
 
 process.on('uncaughtException', function (err) {
     log.write({'Uncaught Exception': err});

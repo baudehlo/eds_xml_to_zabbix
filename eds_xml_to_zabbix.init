@@ -11,7 +11,7 @@
 
 exec="/usr/bin/node"
 prog="owserver"
-pidfile="/var/run/owserver.pid"
+PIDFILE="/var/run/owserver.pid"
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
@@ -32,7 +32,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-    killproc $prog
+    killproc -p ${PIDFILE} $prog
     retval=$?
     echo
     rm -f $lockfile
@@ -54,7 +54,7 @@ force_reload() {
 
 rh_status() {
     # run checks to determine if the service is running or use generic status
-    status -p ${pidfile} $prog
+    status -p ${PIDFILE} $prog
 }
 
 rh_status_q() {
