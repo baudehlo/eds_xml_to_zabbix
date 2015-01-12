@@ -98,7 +98,7 @@ http.createServer(function (req, res) {
                         log_data[key] = match[2];
                     }
                 });
-                log.write({meta: log_data, msg: 'data received');
+                log.write({meta: log_data, msg: 'data received'});
             }
             // console.log("Got values: ", data);
             sender.send(data);
