@@ -10,8 +10,8 @@
 . /etc/rc.d/init.d/functions
 
 exec="/usr/bin/node"
-prog="eds_xml_to_zabbix"
-pidfile="/var/run/eds_xml_to_zabbix.pid"
+prog="owserver"
+pidfile="/var/run/owserver.pid"
 
 [ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
 
