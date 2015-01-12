@@ -1,0 +1,94 @@
+#!/bin/sh
+#
+# eds_xml_to_zabbix
+#
+# chkconfig:   2345 80 30
+# description: Receives EDS XML on port 3000 and sends to zabbix
+#
+
+# Source function library.
+. /etc/rc.d/init.d/functions
+
+exec="/usr/bin/node"
+prog="eds_xml_to_zabbix"
+
+[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
+
+[ -z "$max_open_files" ] && max_open_files=65535
+
+lockfile=/var/lock/subsys/$prog
+
+start() {
+    [ -x $exec ] || exit 5
+    echo -n $"Starting $prog: "
+    ulimit -n $max_open_files
+    daemon "$exec /home/matt/eds_xml_to_zabbix/index.js"
+    retval=$?
+    echo
+    [ $retval -eq 0 ] && touch $lockfile
+    return $retval
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    retval=$?
+    echo
+    rm -f $lockfile
+    return $retval
+}
+
+restart() {
+    stop
+    start
+}
+
+reload() {
+    restart
+}
+
+force_reload() {
+    restart
+}
+
+rh_status() {
+    # run checks to determine if the service is running or use generic status
+    status $prog
+}
+
+rh_status_q() {
+    rh_status >/dev/null 2>&1
+}
+
+
+case "$1" in
+    start)
+        rh_status_q && exit 0
+        $1
+        ;;
+    stop)
+        rh_status_q || exit 0
+        $1
+        ;;
+    restart)
+        $1
+        ;;
+    reload)
+        rh_status_q || exit 7
+        $1
+        ;;
+    force-reload)
+        force_reload
+        ;;
+    status)
+        rh_status
+        ;;
+    condrestart|try-restart)
+        rh_status_q || exit 0
+        restart
+        ;;
+    *)
+        echo $"Usage: $0 {start|stop|status|restart|condrestart|try-restart|reload|force-reload}"
+        exit 2
+esac
+exit $?
