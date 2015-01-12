@@ -8,13 +8,18 @@ var zabbix_options = {
     'with-timestamps': true,
 };
 
-var this_host = require('os').hostname();
-
-var sender = require('zbx_sender').createZabbixSender(zabbix_options);
-var http = require('http');
-var dns = require('dns');
-
-var port = parseInt(process.env.PORT || '3000', 10);
+var syslog_options = {
+    name: 'eds_xml_to_zabbix',
+    // msgId: '',
+    // PEN: <private enterprise number>,
+    facility: 'USER',
+    hostname: 'owserver',
+    connection: {
+        type: 'udp',
+        host: '127.0.0.1',
+        port: 514,
+    }
+};
 
 var wanted_keys = [
     'Temperature',
@@ -22,6 +27,16 @@ var wanted_keys = [
     'Vad',
     'Humidity',
 ];
+
+var this_host = require('os').hostname();
+
+var sender = require('zbx_sender').createZabbixSender(zabbix_options);
+var Syslog = require('syslog2');
+var log = new Syslog(syslog_options);
+var http = require('http');
+var dns = require('dns');
+
+var port = parseInt(process.env.PORT || '3000', 10);
 
 /* Example Data:
 
@@ -45,7 +60,7 @@ var wanted_keys = [
 */
 
 process.on('uncaughtException', function (err) {
-    console.error("Uncaught Exception: ", err);
+    log.write({'Uncaught Exception': err});
     process.exit(-1);
 })
 
@@ -56,7 +71,7 @@ http.createServer(function (req, res) {
             post_data += data;
         });
         req.on('end', function () {
-            if (process.env.LOGPOSTDATA) console.log("POST data: ", post_data);
+            if (process.env.LOGPOSTDATA) console.log({post_data: post_data});
             var match;
             var data = [];
             var rom_id = 'Unknown_Rom_ID';
@@ -69,7 +84,7 @@ http.createServer(function (req, res) {
                 if (match) {
                     rom_id = match[2];
                 }
-                console.log("ROMId: " + rom_id);
+                var log_data = {ROMId: rom_id};
                 wanted_keys.forEach(function (key) {
                     var regexp = new RegExp('<' + key + '([^>]*)>([^<]*)<\/' + key + '>');
                     match = regexp.exec(owd_data);
@@ -80,9 +95,10 @@ http.createServer(function (req, res) {
                             clock: now.toFixed(),
                             host: rom_id,
                         });
-                        console.log("  " + key + ": " + match[2]);
+                        log_data[key] = match[2];
                     }
                 });
+                log.write({meta: log_data, msg: 'data received');
             }
             // console.log("Got values: ", data);
             sender.send(data);
@@ -95,5 +111,5 @@ http.createServer(function (req, res) {
         res.end("No Thanks");
     }
 }).listen(port, function () {
-    console.log("Listening on port:", port);
+    log.write("Listening on port: " + port);
 });
