@@ -9,6 +9,8 @@
   "author": "Matt Sergeant",
   "license": "Private",
   "dependencies": {
+    "daemon": "^1.1.0",
+    "npid": "^0.4.0",
     "syslog2": "^1.0.3",
     "zabbix-sender": "^0.2.0",
     "zbx_sender": "^0.2.1"
