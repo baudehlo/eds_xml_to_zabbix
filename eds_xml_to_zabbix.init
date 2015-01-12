@@ -23,7 +23,7 @@ start() {
     [ -x $exec ] || exit 5
     echo -n $"Starting $prog: "
     ulimit -n $max_open_files
-    daemon --pidfile ${pidfile} -- "$exec /opt/owserver/index.js"
+    daemon $exec /opt/owserver/index.js
     retval=$?
     echo
     [ $retval -eq 0 ] && touch $lockfile
@@ -32,7 +32,7 @@ start() {
 
 stop() {
     echo -n $"Stopping $prog: "
-    killproc --pidfile ${pidfile} $prog
+    killproc $prog
     retval=$?
     echo
     rm -f $lockfile
@@ -54,7 +54,7 @@ force_reload() {
 
 rh_status() {
     # run checks to determine if the service is running or use generic status
-    status --pidfile ${pidfile} $prog
+    status -p ${pidfile} $prog
 }
 
 rh_status_q() {
