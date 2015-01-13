@@ -107,11 +107,11 @@ http.createServer(function (req, res) {
                     if (match) {
                         data.push({
                             key: key.toLowerCase(),
-                            value:  /^[-+]?([0-9]*\.[0-9]+|[0-9]+)$/.test(match[2]) ? parseFloat(match[2]) : match[2],
+                            value: parseFloat(match[2]),
                             clock: now.toFixed(),
                             host: rom_id,
                         });
-                        log_data[key] = match[2];
+                        log_data[key] = parseFloat(match[2]);
                     }
                 });
                 if (log_data.Vad) {
