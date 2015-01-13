@@ -17,9 +17,10 @@ var syslog_options = {
     facility: 'USER',
     hostname: 'owserver',
     connection: {
-        type: 'udp',
-        host: '127.0.0.1',
-        port: 514,
+        type: 'unix',
+        path: '/dev/log',
+        // host: '127.0.0.1',
+        // port: 514,
     }
 };
 
