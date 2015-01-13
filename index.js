@@ -67,6 +67,13 @@ if (process.env.NODE_ENV != 'development') {
     daemon();
     npid.create(pid_file).removeOnExit();
 }
+else {
+    log = {
+        write: function (data) {
+            console.log(data);
+        }
+    }
+}
 
 process.on('uncaughtException', function (err) {
     log.write({'Uncaught Exception': err});
@@ -107,10 +114,28 @@ http.createServer(function (req, res) {
                         log_data[key] = match[2];
                     }
                 });
+                if (log_data.Vad) {
+                    var vad_humidity = ((log_data.Vad - 0.826) / 0.0315);
+                    data.push({
+                        key: 'vad_humidity',
+                        value: vad_humidity,
+                        clock: now.toFixed(),
+                        host: rom_id,                        
+                    });
+                    log_data.vad_humidity = vad_humidity;
+                    var var_co2 = (log_data.Vad - 0.5) / 4 x3000;
+                    data.push({
+                        key: 'vad_co2',
+                        value: vad_co2,
+                        clock: now.toFixed(),
+                        host: rom_id,                        
+                    });
+                    log_data.vad_co2 = vad_co2;
+                }
                 log.write({meta: log_data, msg: 'data received'});
             }
             // console.log("Got values: ", data);
-            sender.send(data);
+            if (data.length) sender.send(data);
             res.writeHead(200, {'Content-Type': 'text/plain'});
             res.end("Thanks");                    
         });
