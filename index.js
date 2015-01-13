@@ -107,7 +107,7 @@ http.createServer(function (req, res) {
                     if (match) {
                         data.push({
                             key: key.toLowerCase(),
-                            value: match[2],
+                            value:  /^[-+]?([0-9]*\.[0-9]+|[0-9]+)$/.test(match[2]) ? parseFloat(match[2]) : match[2],
                             clock: now.toFixed(),
                             host: rom_id,
                         });
