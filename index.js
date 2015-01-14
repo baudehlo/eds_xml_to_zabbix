@@ -41,6 +41,7 @@ var winston = require('winston');
 // var log = new Syslog(syslog_options);
 var http = require('http');
 var dns = require('dns');
+var os = require('os');
 
 var port = parseInt(process.env.PORT || '3000', 10);
 
@@ -65,24 +66,23 @@ var port = parseInt(process.env.PORT || '3000', 10);
 
 */
 
-// process.on('uncaughtException', function (err) {
-//     log.error('Uncaught Exception',  err);
-//     process.exit(-1);
-// })
+var log = new (winston.Logger)({
+    transports: [
+        new (winston.transports.Console)(),
+    ],
+});
+
+process.on('uncaughtException', function (err) {
+    log.error('Uncaught Exception' +  err);
+    process.exit(-1);
+});
 
 if (process.env.NODE_ENV != 'development') {
     daemon();
     npid.create(pid_file).removeOnExit();
-    var log = new (winston.Logger)({
+    log = new (winston.Logger)({
         transports: [
-            new (winston.transports.DailyRotateFile)({filename: '/var/log/owserver.log'}),
-        ],
-    });
-}
-else {
-    var log = new (winston.Logger)({
-        transports: [
-            new (winston.transports.Console)(),
+            new (winston.transports.DailyRotateFile)({filename: process.env.LOGFILE || '/var/log/owserver.log'}),
         ],
     });
 }
