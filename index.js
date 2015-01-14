@@ -10,19 +10,19 @@ var zabbix_options = {
     'with-timestamps': true,
 };
 
-var syslog_options = {
-    name: 'eds_xml_to_zabbix',
-    // msgId: '',
-    // PEN: <private enterprise number>,
-    facility: 'USER',
-    hostname: 'owserver',
-    connection: {
-        type: 'unix',
-        path: '/dev/log',
-        // host: '127.0.0.1',
-        // port: 514,
-    }
-};
+// var syslog_options = {
+//     name: 'eds_xml_to_zabbix',
+//     // msgId: '',
+//     // PEN: <private enterprise number>,
+//     facility: 'USER',
+//     hostname: 'owserver',
+//     connection: {
+//         type: 'unix',
+//         path: '/dev/log',
+//         // host: '127.0.0.1',
+//         // port: 514,
+//     }
+// };
 
 var wanted_keys = [
     'Temperature',
@@ -34,10 +34,11 @@ var wanted_keys = [
 var this_host = require('os').hostname();
 
 var sender = require('zbx_sender').createZabbixSender(zabbix_options);
-var Syslog = require('syslog2');
+// var Syslog = require('syslog2');
 var npid = require('npid');
 var daemon = require('daemon');
-var log = new Syslog(syslog_options);
+var winston = require('winston');
+// var log = new Syslog(syslog_options);
 var http = require('http');
 var dns = require('dns');
 
@@ -64,22 +65,27 @@ var port = parseInt(process.env.PORT || '3000', 10);
 
 */
 
+// process.on('uncaughtException', function (err) {
+//     log.error('Uncaught Exception',  err);
+//     process.exit(-1);
+// })
+
 if (process.env.NODE_ENV != 'development') {
     daemon();
     npid.create(pid_file).removeOnExit();
+    var log = new (winston.Logger)({
+        transports: [
+            new (winston.transports.DailyRotateFile)({filename: '/var/log/owserver.log'}),
+        ],
+    });
 }
 else {
-    log = {
-        write: function (data) {
-            console.log(data);
-        }
-    }
+    var log = new (winston.Logger)({
+        transports: [
+            new (winston.transports.Console)(),
+        ],
+    });
 }
-
-process.on('uncaughtException', function (err) {
-    log.write({'Uncaught Exception': err});
-    process.exit(-1);
-})
 
 http.createServer(function (req, res) {
     if (req.method == 'POST') {
@@ -133,7 +139,7 @@ http.createServer(function (req, res) {
                     });
                     log_data.vad_co2 = vad_co2;
                 }
-                log.write({meta: log_data, msg: 'data received'});
+                log.info('Sending data:', log_data);
             }
             // console.log("Got values: ", data);
             if (data.length) sender.send(data);
@@ -146,5 +152,5 @@ http.createServer(function (req, res) {
         res.end("No Thanks");
     }
 }).listen(port, function () {
-    log.write("Listening on port: " + port);
+    log.info("Listening on port: " + port);
 });
