@@ -121,7 +121,7 @@ http.createServer(function (req, res) {
                         log_data[key] = parseFloat(match[2]);
                     }
                 });
-                if (log_data.Vad) {
+                if (log_data.Vad && log_data.Vad < 4.5) {
                     var vad_humidity = ((log_data.Vad - 0.826) / 0.0315);
                     data.push({
                         key: 'vad_humidity',
