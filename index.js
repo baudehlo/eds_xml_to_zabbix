@@ -130,7 +130,7 @@ http.createServer(function (req, res) {
                         host: rom_id,                        
                     });
                     log_data.vad_humidity = vad_humidity;
-                    var vad_co2 = (log_data.Vad - 0.5) / 4 * 3000;
+                    var vad_co2 = (log_data.Vad - 0.5) / 4 * 5000;
                     data.push({
                         key: 'vad_co2',
                         value: vad_co2,
